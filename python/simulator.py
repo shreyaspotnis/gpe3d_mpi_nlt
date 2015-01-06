@@ -215,13 +215,11 @@ def create_batch_jobs(base_save_folder):
             sim.log_n0 = logn
             sim.calculate_derived_quantities()
             sim.print_stuff()
-            sim.create_config_files(self.get_save_folder_name(base_save_folder))
+            save_folder = self.get_save_folder_name(base_save_folder)
+            sim.create_config_files(save_folder)
             sims.append(sim)
 
-    shutil.copyfile('batch_calculate_parms.py',
-                    os.path.join(base_save_folder,
-                                 'batch_calculate_parms.py'))
-    write_submission_script()
+    write_submission_script(base_save_folder)
 
 
 def create_single_job(base_save_folder):
