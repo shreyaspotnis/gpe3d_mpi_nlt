@@ -1,0 +1,16 @@
+#!/bin/bash
+# MOAB/Torque submission script for SciNet GPC
+#
+#PBS -l nodes=2:ppn=8,walltime=15:00:00
+#PBS -N test
+
+# load modules (must match modules used for compilation)
+module purge
+source ~/scripts/load_python
+source ~/scripts/load_mpi
+
+# DIRECTORY TO RUN - $PBS_O_WORKDIR is directory job was submitted from
+cd $PBS_O_WORKDIR
+
+# EXECUTION COMMAND; -np = nodes*ppn
+mpirun -np 16 ~/code/gpe3d_mpi_nlt/bin/gpe3d_mpi_nlt
