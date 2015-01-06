@@ -84,9 +84,6 @@ double attenuation_factor(configuration *cfg, int ix);
 void store_psi_sum(configuration *cfg, fftw_complex *psi_local, int index);
 /* End of Function declarations */
 
-
-
-
 int main(int argc, char **argv) {
     // by default log to stdout
     logfile = stdout;
@@ -154,6 +151,9 @@ int main(int argc, char **argv) {
     // do an imag_time propagation to find the ground state
     fftw_complex imag_pre_factor;
     imag_pre_factor = 1; // because we are propagating in imag time
+
+    fprintf(logfile, "\n*****************************\n");
+    fprintf(logfile, "\nImaginary time propagation\n");
     int i = 0;
     for(i = 0; i < cfg.Nt_imag; i++) {
 
@@ -172,6 +172,10 @@ int main(int argc, char **argv) {
 
         // normalize the wavefunction
         double p2 = norm_squared(psi_local, alloc_local);  // get norm
+
+        if(rank == MASTER_RANK) {
+            print_double(logfile, "|Psi|^2:\t", p2)
+        }
         p2 *= cfg.dx * cfg.dy * cfg.dz;
         double p2_inv_sqrt = 1.0/sqrt(p2);
         int i1;
