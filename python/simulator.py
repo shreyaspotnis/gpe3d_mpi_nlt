@@ -10,9 +10,6 @@ import os
 import pickle
 
 
-base_save_folder = prependscratch('nl6_debug/')
-
-
 class Simulator(object):
     # Inputs start here
     Nx = 256
@@ -42,6 +39,8 @@ class Simulator(object):
     bg_decay_time = 3.3  # s
 
     def calculate_derived_quantities(self):
+        """Calculate quantities required for the simulation, but dependent on
+        the input parameters."""
         self.n_atoms = np.exp(self.log_n0)
         self.fy = self.fz / 2.0
         self.barrier_pos_index = self.Nx / 4
@@ -79,7 +78,6 @@ class Simulator(object):
         self.bg_decay_time_nd = self.bg_decay_time / self.time_scale
         self.loss_factor = np.exp(-self.dt/self.bg_decay_time_nd/2.0/2.0)
         self.nt_ramp = int(self.ramp_time / self.time_scale / self.dt)
-        self.store_dir = self.get_save_folder_name()
 
     def print_stuff(self):
         print('kappa:', self.kappa)
@@ -108,7 +106,9 @@ class Simulator(object):
         print('loss_factor', self.loss_factor)
         print('nt_ramp', self.nt_ramp)
 
-    def get_save_folder_name(self):
+    def get_save_folder_name(self, base_save_folder):
+        """Returns the path in which to write contents, based on barrier height
+        and atom number. Appends this folder to base_save_folder."""
         folder_name_fmt = 'bh0_{0:.0f}_bh1_{1:.0f}_logn0_{2:.1f}'
 
         folder_name = folder_name_fmt.format(self.barrier_height_imag_t*1e9,
@@ -118,10 +118,21 @@ class Simulator(object):
         store_dir = os.path.join(base_save_folder, folder_name)
         return store_dir
 
-    def make_parms_file(self):
-        if not os.path.exists(self.store_dir):
-            os.makedirs(self.store_dir)
-        parms_file_name = os.path.join(self.store_dir, 'parms.ini')
+    def create_config_files(self, store_dir):
+        """Creates the following files in store_dir:
+
+        parms.ini - All the simulation parameters needed for the 3D GPE
+                    simulation.
+
+        jobscript - A bash file which describes the MPI job to run. This file
+                    is copied from the scripts/ folder
+
+        sim.pkl - A pickle of itself, used to later load the sim parameters.
+        """
+        if not os.path.exists(store_dir):
+
+            os.makedirs(store_dir)
+        parms_file_name = os.path.join(store_dir, 'parms.ini')
         with open(parms_file_name, 'w') as f:
             f.write('[sim]')
 
@@ -148,7 +159,7 @@ class Simulator(object):
                   str(self.barrier_waist_nd))
         parms.set('sim', 'barrier_rayleigh_range',
                   str(self.barrier_rayleigh_range_nd))
-        parms.set('sim', 'store_dir', self.store_dir)
+        parms.set('sim', 'store_dir', store_dir)
         parms.set('sim', 'padding_start_index', str(self.padding_start_index))
         parms.set('sim', 'padding_slope', str(self.padding_slope_nd))
         parms.set('sim', 'nt_imag', str(self.Nt_imag))
@@ -156,31 +167,44 @@ class Simulator(object):
         parms.set('sim', 'loss_factor', str(self.loss_factor))
         parms.set('sim', 'nt_ramp', str(self.nt_ramp))
 
+        curr_file_dir = os.path.dirname(os.path.realpath(__file__))
+        jobscript_path = os.path.join(curr_file_dir, '../scripts/jobscript')
+
         with open(parms_file_name, 'w') as f:
             parms.write(f)
-        shutil.copyfile('jobscript', os.path.join(self.store_dir, 'jobscript'))
+        shutil.copyfile(jobscript_path, os.path.join(store_dir, 'jobscript'))
 
-        pickle_file_name = os.path.join(self.store_dir, 'sim.pkl')
+        pickle_file_name = os.path.join(store_dir, 'sim.pkl')
         self.pickle(pickle_file_name)
 
     def pickle(self, fname):
         with open(fname, 'wb') as f:
             pickle.dump(self, f)
 
-        
-def load_simulator_from_file(fname):
+
+def load_sim_from_file(fname):
     with open(fname, 'rb') as f:
         sim = pickle.load(f)
     return sim
-    
 
-def write_submission_script():
+
+def load_sim_from_folder(folder):
+    with open(os.path.join(folder, 'sim.pkl'), 'rb') as f:
+        sim = pickle.load(f)
+    return sim
+
+
+def write_submission_script(base_save_folder):
+    """Writes a script to base_save_folder. When this script is run, it
+    recursively goes to all sub-directories in base_save_folder and runs
+    "qsub jobscript"
+    """
     string = 'find . -type d -exec sh -c \'(cd {} && qsub jobscript)\' \';\''
     with open(os.path.join(base_save_folder, 'job_submit.sh'), 'w') as f:
         f.write(string)
 
 
-def create_batch_jobs():
+def create_batch_jobs(base_save_folder):
     logn_atoms_array = np.array([10., 10.5, 11., 11.5, 12., 12.5])
     bht_array = np.array([280, 300, 320, 350])*1e-9
     sims = []
@@ -191,7 +215,7 @@ def create_batch_jobs():
             sim.log_n0 = logn
             sim.calculate_derived_quantities()
             sim.print_stuff()
-            sim.make_parms_file()
+            sim.create_config_files(self.get_save_folder_name(base_save_folder))
             sims.append(sim)
 
     shutil.copyfile('batch_calculate_parms.py',
@@ -199,15 +223,21 @@ def create_batch_jobs():
                                  'batch_calculate_parms.py'))
     write_submission_script()
 
-def create_single_job():
+
+def create_single_job(base_save_folder):
     sim = Simulator()
     sim.barrier_height_t = 330e-9
     sim.log_n0 = 10.0
 
     sim.calculate_derived_quantities()
     sim.print_stuff()
-    sim.make_parms_file()
+    save_folder = sim.get_save_folder_name(base_save_folder)
+    sim.create_config_files(save_folder)
+
+    sim1 = load_sim_from_folder(save_folder)
+    sim1.print_stuff()
+
 
 if __name__ == '__main__':
-    create_single_job()
-
+    base_save_folder = prependscratch('nl6_debug/')
+    create_single_job(base_save_folder)
