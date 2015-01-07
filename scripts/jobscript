@@ -24,4 +24,7 @@ cd $PBS_O_WORKDIR
 
 # EXECUTION COMMAND; -np = nodes*ppn
 # make sure that gpe3d_mpi_nlt/bin is in $PATH
-mpirun -np 16 gpe3d_mpi_nlt
+# mpirun -np 16 gpe3d_mpi_nlt
+
+# If that does not work, use the explicit path instead
+mpirun -np 16 ~/code/nltunneling/gpe3d_mpi_nlt/bin/gpe3d_mpi_nlt
