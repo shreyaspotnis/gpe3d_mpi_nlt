@@ -80,6 +80,10 @@ class Simulator(object):
         self.nt_ramp = int(self.ramp_time / self.time_scale / self.dt)
 
     def print_stuff(self):
+        print('dx_real(um)', self.dx*self.length_scale*1e6)
+        print('dy_real(um)', self.dy*self.length_scale*1e6)
+        print('dz_real(um)', self.dz*self.length_scale*1e6)
+        print('dt(ms)', self.dt*self.time_scale*1e3)
         print('kappa:', self.kappa)
         print('alpha', self.alpha)
         print('mu_nd', self.mu_nd)

@@ -152,8 +152,14 @@ int main(int argc, char **argv) {
     fftw_complex imag_pre_factor;
     imag_pre_factor = 1; // because we are propagating in imag time
 
-    fprintf(logfile, "\n*****************************\n");
-    fprintf(logfile, "\nImaginary time propagation\n");
+    double p2 = norm_squared(psi_local, alloc_local);  // get norm
+    if(rank == MASTER_RANK) {
+        fprintf(logfile, "\n*****************************\n");
+        print_double(logfile, "|Psi|^0 (guess)", p2);
+        fprintf(logfile, "\n*****************************\n");
+        fprintf(logfile, "\nImaginary time propagation\n");
+        fflush(logfile);
+    }
     int i = 0;
     for(i = 0; i < cfg.Nt_imag; i++) {
 
@@ -173,10 +179,12 @@ int main(int argc, char **argv) {
         // normalize the wavefunction
         double p2 = norm_squared(psi_local, alloc_local);  // get norm
 
-        if(rank == MASTER_RANK) {
-            print_double(logfile, "|Psi|^2:\t", p2)
-        }
         p2 *= cfg.dx * cfg.dy * cfg.dz;
+        if(rank == MASTER_RANK) {
+            print_double(logfile, "|Psi|^2:\t", p2);
+            fflush(logfile);
+        }
+
         double p2_inv_sqrt = 1.0/sqrt(p2);
         int i1;
         for(i1=0; i1 < alloc_local; i1++)
@@ -457,7 +465,9 @@ void init_psi(configuration *cfg, double *x_grid, double *y_grid,
                     psi_local[current_index] = 0.0;
                 // Test if ground state wavefurction is right by starting
                 // with a completely flat wavefunction
-                // psi_local[current_index] = 1.0;
+                // Actually, just setting psi to 1.0 works well, so
+                // we will keep it that way
+                psi_local[current_index] = 1.0;
                 current_index++;
             }
         }

@@ -26,7 +26,7 @@ int read_config(configuration *cfg, int argc, char **argv) {
         } // end of while
 
         if (ini_parse(input_filename, handler, cfg) < 0) {
-                fprintf(stderr, "Cannot load parms file: %s'\n", input_filename);
+                fprintf(stderr, "Cannot load parms file: %s\n", input_filename);
                 success = FALSE;
         }
         if(check_config(cfg) != 0)
