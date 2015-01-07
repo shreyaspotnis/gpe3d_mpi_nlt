@@ -83,6 +83,7 @@ class Simulator(object):
         print('dx_real(um)', self.dx*self.length_scale*1e6)
         print('dy_real(um)', self.dy*self.length_scale*1e6)
         print('dz_real(um)', self.dz*self.length_scale*1e6)
+        print('Total time(ms)', self.Nt*self.time_scale*1e3)
         print('dt(ms)', self.dt*self.time_scale*1e3)
         print('kappa:', self.kappa)
         print('alpha', self.alpha)
