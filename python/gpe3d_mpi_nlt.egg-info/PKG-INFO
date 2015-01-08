@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: gpe3d-mpi-nlt
+Version: 0.1
+Summary: Provides methods to analyze 3D GPE simulations run using gpe3d_nlt_mpi
+Home-page: https://github.com/shreyaspotnis/gpe3d_mpi_nlt
+Author: Shreyas Potnis
+Author-email: shreyaspotnis@gmail.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
