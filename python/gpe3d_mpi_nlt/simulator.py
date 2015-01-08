@@ -172,7 +172,7 @@ class Simulator(object):
         parms.set('sim', 'nt_ramp', str(self.nt_ramp))
 
         curr_file_dir = os.path.dirname(os.path.realpath(__file__))
-        jobscript_path = os.path.join(curr_file_dir, '../scripts/jobscript')
+        jobscript_path = os.path.join(curr_file_dir, '../../scripts/jobscript')
 
         with open(parms_file_name, 'w') as f:
             parms.write(f)
