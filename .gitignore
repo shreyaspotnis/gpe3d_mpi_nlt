@@ -44,3 +44,5 @@ Temporary Items
 
 # Binaries
 bin/gpe3d_mpi_nlt
+python/gpe3d_mpi_nlt/simulator.pyc
+*.pyc

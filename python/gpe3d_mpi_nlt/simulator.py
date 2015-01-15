@@ -173,7 +173,7 @@ class Simulator(object):
         parms.set('sim', 'nt_ramp', str(self.nt_ramp))
 
         curr_file_dir = os.path.dirname(os.path.realpath(__file__))
-        jobscript_path = os.path.join(curr_file_dir, '../scripts/jobscript')
+        jobscript_path = os.path.join(curr_file_dir, '../../scripts/jobscript')
 
         with open(parms_file_name, 'w') as f:
             parms.write(f)
@@ -196,6 +196,12 @@ def load_sim_from_file(fname):
 def load_sim_from_folder(folder):
     with open(os.path.join(folder, 'sim.pkl'), 'rb') as f:
         sim = pickle.load(f)
+
+    # check if the simulation has already run
+    ex_vals_path = os.path.join(folder, 'ex_vals')
+    if os.path.exists(ex_vals_path):
+        ex_vals = dict_from_data_file(ex_vals_path)
+        sim.ex_vals = ex_vals
     return sim
 
 
@@ -207,6 +213,26 @@ def write_submission_script(base_save_folder):
     string = 'find . -type d -exec sh -c \'(cd {} && qsub jobscript)\' \';\''
     with open(os.path.join(base_save_folder, 'job_submit.sh'), 'w') as f:
         f.write(string)
+
+
+def dict_from_data_file(full_path):
+    """Reads tabulated data and returns a dict with each col being an entry
+       in the dict."""
+    with open(full_path) as fp:
+        first_line = fp.readline()
+    ex_val = np.loadtxt(full_path)
+    var_names = first_line.split('\t')
+    var_names[0] = var_names[0][1:]  # remove # from the first index
+    var_names[-1] = var_names[-1][:-1]  # remove new line from the last index
+
+    data_dict = {}
+    for col, vn in zip(ex_val.T, var_names):
+        data_dict[vn] = col
+    return data_dict
+
+
+def get_ex_vals_dict(folder_name):
+    return dict_from_data_file(os.path.join(folder_name, 'ex_vals'))
 
 
 def create_batch_jobs(base_save_folder):
