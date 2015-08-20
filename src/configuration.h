@@ -1,6 +1,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+// Loads paramaters from parms.ini and stores it in this structure
 typedef struct configuration {
     int Nx;
     int Nx_local;
